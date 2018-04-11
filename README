@@ -1,0 +1,6 @@
+I have no idea how .md's work lol
+
+I like math, fractals and programming, so here is a cuda-accellerated command line
+mandelbrot generator. I'll probably be working on a gui-based mandelbrot explorer
+soon, only one free and good is slow and has no option to use gpu, which does
+at least a 10x speedup here.
