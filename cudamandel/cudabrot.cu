@@ -79,7 +79,10 @@ int main(int argc, char* argv[]) {
 	uint8_t *dat_d;
 	cudaError_t err = cudaMalloc(&dat_d, width * height * 3);
 	if (err != cudaSuccess) {
-		fprintf(stderr, "cudaMalloc: %s\n", cudaGetErrorString(err));
+		fprintf(stderr, "Couldn't allocate memory on your card. Either you have"
+			" chosen a stupidly"
+			" high resolution, you don't have cuda drivers"
+			" or you card is not supported.\n");
 		return EXIT_FAILURE;
 	}
 	
