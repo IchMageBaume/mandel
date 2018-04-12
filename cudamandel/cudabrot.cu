@@ -104,10 +104,23 @@ int main(int argc, char* argv[]) {
 	
 	if(argc > 1) {
 		if(argc < 9) {
-			printf("Give me all arguments or none. (or use '-' for default value)\n"
-				"Syntax:\n  %s <width> <colorScheme> <iterations> <xMin> <xMax>"
-				" <yMin> <yMax> <xPerLaunch>\n",
-				argv[0]);
+			if(strcmp(argv[1], "-h") && strcmp(argv[1], "--help"))
+				printf("Give me all arguments or none. (or use '-' for default value)\n"
+					"Syntax:\n  %s <width> <colorScheme> <iterations> <xMin> <xMax>"
+					" <yMin> <yMax> <xPerLaunch>\nOr -h/--help for more info\n",
+					argv[0]);
+			else
+				printf("Syntax:\n  %s <width> <colorScheme> <iterations> <xMin> <xMax>"
+					" <yMin> <yMax> <xPerLaunch>\n"
+					"width: width and height of output png, in pixels\n"
+					"colorScheme:\n  0: monochrome\n  1: monochrome, inverted\n"
+					"  2: rainbow\n  3: rainbow, faster color change\n"
+					"iterations: max iterations. More is slower, but more accurate\n"
+					"xMin-yMax: boundary in complex plane (y is the imaginary part)\n"
+					"xPerLaunch: pixels per row calculated per launch of cuda"
+					" kernels. If that takes > 2s on standard windows,"
+					" this program crashes. So lower values are more stable"
+					" but slower.\n", argv[0]);
 			return 1;
 		}
 		
