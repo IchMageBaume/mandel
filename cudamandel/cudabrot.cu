@@ -76,7 +76,8 @@ __device__ uint32_t genMandelPixel(double x, double y) {
 		if (zrsq + zisq > 4)
 			break;
 		double temp = zrsq - zisq + x;
-		zi = 2 * zr * zi + y;
+		double zrzi = zr * zi;
+		zi = zrzi + zrzi + y;
 		zr = temp;
 	}
 	
