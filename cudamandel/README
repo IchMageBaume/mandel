@@ -1,0 +1,7 @@
+Compiling:
+	nvcc cudabrot.cu -o mandel(.exe for windows)
+
+Why:
+	-Fast (uses CUDA)
+	-WTFPL (basically the unlicense, but with swearing)
+	-Short, ez source
