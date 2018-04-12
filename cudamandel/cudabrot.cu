@@ -20,6 +20,37 @@ __managed__ double xMax = 0.29385;
 __managed__ double yMin = 0.01495;
 __managed__ double yMax = 0.01505;
 
+__device__ uint32_t rgbFromIter(int iter)
+{
+	int h = int(iter * 256 * 6 / iterations);
+	int x = h % 0x100;
+
+	int r = 0, g = 0, b = 0;
+	switch (h / 256)
+	{
+	case 0: 
+		r = 255; g = x;
+		break;
+	case 1:
+		g = 255; r = 255 - x;
+		break;
+	case 2:
+		g = 255; b = x;
+		break;
+	case 3:
+		b = 255; g = 255 - x;
+		break;
+	case 4:
+		b = 255; r = x;
+		break;
+	case 5: 
+		r = 255; b = 255 - x;
+		break;
+	}
+
+	return r + (g << 8) + (b << 16);
+}
+
 __device__ uint32_t genMandelPixel(double x, double y) {
 	double zr = 0;
 	double zi = 0;
@@ -36,9 +67,7 @@ __device__ uint32_t genMandelPixel(double x, double y) {
 	
 	if(i == iterations) return 0;
 	
-	double j = (double)i / iterations * 255;
-	
-	return ((int)j << 16) | ((int)j << 8) | (int)j;
+	return rgbFromIter(i);
 }
 
 __global__ void genLine(uint8_t* dat, int launchIdx) {
@@ -104,7 +133,7 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "done (%2d/%2d)\r", i + 1, 
 			width/xPerLaunch + (width % xPerLaunch == 0? 0 : 1));
 	}
-
+	
 	fprintf(stderr, "\n");
 	
 	uint8_t *dat_h = (uint8_t*)malloc(width * height * 3);
