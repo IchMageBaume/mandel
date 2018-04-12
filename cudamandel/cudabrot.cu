@@ -7,6 +7,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+__managed__ int colorScheme = 1;
 
 __managed__ int xPerLaunch = 512;
 
@@ -19,6 +20,51 @@ __managed__ double xMin = 0.29375;
 __managed__ double xMax = 0.29385;
 __managed__ double yMin = 0.01495;
 __managed__ double yMax = 0.01505;
+
+__device__ uint32_t rgbFromIter(int iter)
+{
+	if(colorScheme == 0 || colorScheme == 1) {
+		//Monochrome
+		int j = iter * 256 / iterations;
+		
+		//white-to-black instead of black-to-white gradient
+		if(colorScheme == 1) j = 256 - j;
+		
+		return ((int)j << 16) | ((int)j << 8) | (int)j;
+	}
+	else if(colorScheme == 2 || colorScheme == 3) {
+		//Rainbow
+		int h = int((iter * (colorScheme == 2? 1 : 8)) % 256 * 6);
+		int x = h % 0x100;
+		
+		int r = 0, g = 0, b = 0;
+		switch (h / 256)
+		{
+		case 0: 
+			r = 255; g = x;
+			break;
+		case 1:
+			g = 255; r = 255 - x;
+			break;
+		case 2:
+			g = 255; b = x;
+			break;
+		case 3:
+			b = 255; g = 255 - x;
+			break;
+		case 4:
+			b = 255; r = x;
+			break;
+		case 5: 
+			r = 255; b = 255 - x;
+			break;
+		}
+		
+		return r + (g << 8) + (b << 16);
+	}
+	
+	return 0;
+}
 
 __device__ uint32_t genMandelPixel(double x, double y) {
 	double zr = 0;
@@ -36,9 +82,7 @@ __device__ uint32_t genMandelPixel(double x, double y) {
 	
 	if(i == iterations) return 0;
 	
-	double j = (double)i / iterations * 255;
-	
-	return ((int)j << 16) | ((int)j << 8) | (int)j;
+	return rgbFromIter(i);
 }
 
 __global__ void genLine(uint8_t* dat, int launchIdx) {
@@ -59,21 +103,35 @@ int main(int argc, char* argv[]) {
 	clock_t starttime = clock();
 	
 	if(argc > 1) {
-		if(argc < 8) {
-			printf("Give me all arguments or none. (or use '-' for default value)\n"
-				"Syntax:\n  %s <width> <iterations> <xMin> <xMax> <yMin> <yMax> "
-				"<xPerLaunch>\n",
-				argv[0]);
+		if(argc < 9) {
+			if(strcmp(argv[1], "-h") && strcmp(argv[1], "--help"))
+				printf("Give me all arguments or none. (or use '-' for default value)\n"
+					"Syntax:\n  %s <width> <colorScheme> <iterations> <xMin> <xMax>"
+					" <yMin> <yMax> <xPerLaunch>\nOr -h/--help for more info\n",
+					argv[0]);
+			else
+				printf("Syntax:\n  %s <width> <colorScheme> <iterations> <xMin> <xMax>"
+					" <yMin> <yMax> <xPerLaunch>\n"
+					"width: width and height of output png, in pixels\n"
+					"colorScheme:\n  0: monochrome\n  1: monochrome, inverted\n"
+					"  2: rainbow\n  3: rainbow, faster color change\n"
+					"iterations: max iterations. More is slower, but more accurate\n"
+					"xMin-yMax: boundary in complex plane (y is the imaginary part)\n"
+					"xPerLaunch: pixels per row calculated per launch of cuda"
+					" kernels. If that takes > 2s on standard windows,"
+					" this program crashes. So lower values are more stable"
+					" but slower.\n", argv[0]);
 			return 1;
 		}
 		
 		if(strcmp(argv[1], "-")) width = atoi(argv[1]); height = width;
-		if(strcmp(argv[2], "-")) iterations = atoi(argv[2]);
-		if(strcmp(argv[3], "-")) xMin = atof(argv[3]);
-		if(strcmp(argv[4], "-")) xMax = atof(argv[4]);
-		if(strcmp(argv[5], "-")) yMin = atof(argv[5]);
-		if(strcmp(argv[6], "-")) yMax = atof(argv[6]);
-		if(strcmp(argv[7], "-")) xPerLaunch = atoi(argv[7]);
+		if(strcmp(argv[2], "-")) colorScheme = atoi(argv[2]);
+		if(strcmp(argv[3], "-")) iterations = atoi(argv[3]);
+		if(strcmp(argv[4], "-")) xMin = atof(argv[4]);
+		if(strcmp(argv[5], "-")) xMax = atof(argv[5]);
+		if(strcmp(argv[6], "-")) yMin = atof(argv[6]);
+		if(strcmp(argv[7], "-")) yMax = atof(argv[7]);
+		if(strcmp(argv[8], "-")) xPerLaunch = atoi(argv[8]);
 	}
 	
 	uint8_t *dat_d;
@@ -104,7 +162,7 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "done (%2d/%2d)\r", i + 1, 
 			width/xPerLaunch + (width % xPerLaunch == 0? 0 : 1));
 	}
-
+	
 	fprintf(stderr, "\n");
 	
 	uint8_t *dat_h = (uint8_t*)malloc(width * height * 3);
