@@ -7,7 +7,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-__managed__ int colorScheme = 1;
+__managed__ int colorScheme = 0;
 
 __managed__ int xPerLaunch = 512;
 
@@ -110,8 +110,8 @@ int main(int argc, char* argv[]) {
 					" <yMin> <yMax> <xPerLaunch>\nOr -h/--help for more info\n",
 					argv[0]);
 			else
-				printf("Syntax:\n  %s <width> <colorScheme> <iterations> <xMin> <xMax>"
-					" <yMin> <yMax> <xPerLaunch>\n"
+				printf("Syntax:\n  %s <width> <colorScheme> <iterations> <xMin>"
+					" <xMax> <yMin> <yMax> <xPerLaunch>\n"
 					"width: width and height of output png, in pixels\n"
 					"colorScheme:\n  0: monochrome\n  1: monochrome, inverted\n"
 					"  2: rainbow\n  3: rainbow, faster color change\n"
@@ -120,7 +120,10 @@ int main(int argc, char* argv[]) {
 					"xPerLaunch: pixels per row calculated per launch of cuda"
 					" kernels. If that takes > 2s on standard windows,"
 					" this program crashes. So lower values are more stable"
-					" but slower.\n", argv[0]);
+					" but slower.\n"
+					"default values: %d %d %d %f %f %f %f %d\n", argv[0],
+					width, colorScheme, iterations, xMin, xMax, yMin, yMax,
+					xPerLaunch);
 			return 1;
 		}
 		
