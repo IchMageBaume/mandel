@@ -101,9 +101,11 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 		
-		fprintf(stderr, "done (%2d/%2d)\n", i + 1, 
+		fprintf(stderr, "done (%2d/%2d)\r", i + 1, 
 			width/xPerLaunch + (width % xPerLaunch == 0? 0 : 1));
 	}
+
+	fprintf(stderr, "\n");
 	
 	uint8_t *dat_h = (uint8_t*)malloc(width * height * 3);
 	if(dat_h == NULL) {
